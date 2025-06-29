@@ -36,7 +36,10 @@ persistent actor {
     OrderedMap.Make<Nat>(Nat.compare).get(contactMap, id)
   };
 
-  public query func getContacts() : async [(Nat, T.Contact)] {
-    Iter.toArray(OrderedMap.Make<Nat>(Nat.compare).entries(contactMap))
+  public query func getContacts() : async [T.Contact] {
+    Iter.toArray(Iter.map<(Nat, T.Contact), T.Contact>(
+      OrderedMap.Make<Nat>(Nat.compare).entries(contactMap),
+      func (entry : (Nat, T.Contact)) : T.Contact { entry.1 }
+    ))
   };
 }
