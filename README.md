@@ -1,10 +1,10 @@
 # MotokoMigration
 
-A Motoko-based contact management system with persistent storage capabilities.
+A Motoko-based contact management system with persistent storage capabilities and an migration path.
 
 ## Overview
 
-This project provides a simple contact management system built with Motoko on the Internet Computer. It allows you to add, update, retrieve, and list contact records with persistent storage.
+This project provides a simple contact management system built with Motoko on the Internet Computer. It allows you to add, update, retrieve, and list contact records with persistent storage. Additonally we are going to update the concact type with a new property.
 
 ## Public Methods
 
@@ -81,7 +81,7 @@ Retrieves all contact records in the system.
 dfx canister call backend getAllContacts '()'
 ```
 
-## Data Types
+## Basic Data Types
 
 ### Contact
 ```motoko
@@ -173,10 +173,100 @@ dfx canister call backend getContact '(0)'
 - The `getAllContacts()` method returns contacts in the order they were added
 
 
-### Example Migration Scenario
+# Example Migration Scenario
+
+Now the situation has changed and we want to add a new information to the contact store.
+
+## Migration Goal
 
 Adding a `lastName` field to contacts:
-- Old type: `{ id: Nat, firstName: Text }`
-- New type: `{ id: Nat, firstName: Text, lastName: Text }`
-- Migration: Set `lastName = ""` for all existing contacts
+- **Old type**: `{ id: Nat, firstName: Text }`
+- **New type**: `{ id: Nat, firstName: Text, lastName: Text }`
+- **Migration strategy**: Set `lastName = ""` for all existing contacts
+
+### New Contact Type Structure
+```motoko
+type Contact = {
+  id : Nat;
+  firstName : Text;
+  lastName : Text;
+};
+```
+
+## Step-by-Step Migration Process
+
+### 1. Update Type Definitions
+Add new types to the `types.mo` file (see file):
+- Create `Contact_v1` type with the new `lastName` field
+- Create `ContactAdd_v1` type for adding new contacts
+- Keep existing types for backward compatibility during migration
+
+### 2. Create Migration Module
+Add a new migration file `ContactMigration_1.mo` to the migration folder (see file):
+- Define the migration function that transforms `Contact` to `Contact_v1`
+- Handle the data transformation from old schema to new schema
+- Set default values for new required fields
+
+### 3. Activate Migration in Main Actor
+Uncomment the migration lines in `main.mo`:
+```motoko
+import ContactMigration "./migration/ContactMigration_1";
+(with migration = ContactMigration.migration)
+```
+
+### 4. Update Application Logic
+Modify the main actor to work with new types:
+- Update `addContact` function to use `ContactAdd_v1`
+- Update `updateContact` function to use `Contact_v1`
+- Ensure all methods handle the new `lastName` field
+
+### 5. Deploy with Migration
+```bash
+dfx deploy
+```
+- The migration will automatically run during deployment
+- Existing data will be transformed to include the new `lastName` field
+- All existing contacts will have `lastName = ""`
+
+### 6. Clean Up Migration Code
+After successful migration, comment out the migration lines again:
+```motoko
+// import ContactMigration "./migration/ContactMigration_1";
+// (with migration = ContactMigration.migration)
+```
+
+### 7. Verify Migration Success
+Test the migration by checking existing data:
+```bash
+dfx canister call backend getContacts '()'
+```
+- Verify all existing contacts now have the `lastName` field
+- Confirm the field contains an empty string `""` as expected
+- Test adding new contacts with the `lastName` field
+
+## Important Notes
+
+- **Backup First**: Always backup your data before running migrations
+- **Test Environment**: Test the migration on a development environment first
+- **Monitor Deployment**: Watch for any errors during the migration process
+- **Verify Data Integrity**: Ensure all existing data is preserved and accessible
+- **Clean Up**: Remove migration code after successful completion to keep the codebase clean
+
+## Updated CLI Commands (Post-Migration)
+
+After migration to `Contact_v1` with `lastName` field:
+
+```bash
+# Add contact with firstName and lastName
+dfx canister call backend addContact '(record { firstName = "John"; lastName = "Doe" })'
+
+# Update contact with all fields
+dfx canister call backend updateContact '(record { id = 0; firstName = "John"; lastName = "Smith" })'
+
+# Get specific contact
+dfx canister call backend getContact '(0)'
+
+# List all contacts
+dfx canister call backend getContacts '()'
+```
 
