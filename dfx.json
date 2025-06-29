@@ -1,0 +1,10 @@
+{
+  "canisters": {
+    "backend": {
+      "main": "src/backend/main.mo",
+      "type": "motoko",
+      "args" : "--enhanced-orthogonal-persistence"
+    }
+  },
+  "version": 1
+}
