@@ -7,7 +7,7 @@ import T "./types/types";
 //import ContactMigration "./migration/ContactMigration_1";
 //(with migration = ContactMigration.migration)
 
-persistent actor {
+shared ({caller = creator}) persistent actor class Main() = this {
   
   private var nextId : Nat = 1;
   private var contactMap : OrderedMap.Map<Nat, T.Contact> = OrderedMap.Make<Nat>(Nat.compare).empty<T.Contact>();
