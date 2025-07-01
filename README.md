@@ -2,6 +2,10 @@
 
 A Motoko-based contact management system with persistent storage capabilities and an migration path.
 
+Two examples of a migration path for a single canister:
+- **main Branch** example of a migration path for a single canister using a persistent actor
+- **asCass Branch** example of a migration path for a single canister using a persistent actor class
+
 ## Overview
 
 This project provides a simple contact management system built with Motoko on the Internet Computer. It allows you to add, update, retrieve, and list contact records with persistent storage. Additonally we are going to update the concact type with a new property.
